@@ -2,10 +2,10 @@
 
 #import <Cordova/CDVAvailability.h>
 
-@interface ePOS2Plugin()<Epos2DiscoveryDelegate, Epos2PtrReceiveDelegate>
+@interface epos2Plugin()<Epos2DiscoveryDelegate, Epos2PtrReceiveDelegate>
 @end
 
-@implementation ePOS2Plugin
+@implementation epos2Plugin
 
 - (void)pluginInitialize {
     printerSeries = EPOS2_TM_U220;
