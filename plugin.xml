@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+    id="cordova-plugin-epos2"
+    version="1.0.0">
+    <name>Cordova Plugin ePOS2</name>
+    <description></description>
+    <license>MIT</license>
+    <keywords></keywords>
+    <repo>https://github.com/aelx311/cordova-plugin-epos2.git</repo>
+    <issue> https://github.com/aelx311/cordova-plugin-epos2/issues</issue>
+
+    <!-- android -->
+    <platform name="android">
+      <js-module src="www/plugin.js" name="plugin">
+        <runs/>
+
+        <!-- This is the window variable name you want, like window.epos2 -->
+        <clobbers target="epos2" />
+      </js-module>
+      <config-file target="res/xml/config.xml" parent="/*">
+        <feature name="epos2">
+          <param name="android-package" value="com.example.epos2" />
+          <param name="onload" value="true" />
+        </feature>
+      </config-file>
+
+      <source-file src="src/android/com/example/epos2-plugin.java" target-dir="src/com/example/" />
+    </platform>
+
+    <!-- ios -->
+    <platform name="ios">
+        <js-module src="www/plugin.js" name="plugin">
+            <runs/>
+            <clobbers target="epos2" />
+        </js-module>
+        <config-file target="config.xml" parent="/*">
+            <feature name="epos2">
+                <param name="ios-package" value="epos2" onload="true" />
+            </feature>
+        </config-file>
+
+        <header-file src="src/ios/epos2-plugin.h" />
+        <source-file src="src/ios/epos2-plugin.m" />
+    </platform>
+</plugin>
