@@ -40,7 +40,7 @@
             </feature>
         </config-file>
 
-        <header-file src="src/ios/epos2-plugin.h" />
-        <source-file src="src/ios/epos2-plugin.m" />
+        <header-file src="src/ios/epos2Plugin.h" />
+        <source-file src="src/ios/epos2Plugin.m" />
     </platform>
 </plugin>

@@ -1,11 +1,11 @@
-#import "MyCordovaPlugin.h"
+#import "ePOS2Plugin.h"
 
 #import <Cordova/CDVAvailability.h>
 
-@interface MyCordovaPlugin()<Epos2DiscoveryDelegate, Epos2PtrReceiveDelegate>
+@interface ePOS2Plugin()<Epos2DiscoveryDelegate, Epos2PtrReceiveDelegate>
 @end
 
-@implementation MyCordovaPlugin
+@implementation ePOS2Plugin
 
 - (void)pluginInitialize {
     printerSeries = EPOS2_TM_U220;
@@ -154,7 +154,7 @@
 
 - (void)print:(CDVInvokedUrlCommand *)command {
     self.printCallbackId = command.callbackId;
-    
+
     if (printer == nil) {
         NSLog(@"error in createPrintData()");
         CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Error in create data, printer object not dound."];
@@ -213,7 +213,7 @@
     result = [printer sendData:EPOS2_PARAM_DEFAULT];
     if (result != EPOS2_SUCCESS) {
         [printer disconnect];
-        
+
         CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Error in print data."];
         [self.commandDelegate sendPluginResult:result callbackId:self.printCallbackId];
         return;
