@@ -46,6 +46,7 @@
         <source-file src="src/ios/epos2Plugin.m" />
 
         <framework src="libxml2.2.dylib" framework="true" />
+        <framework src="ExternalAccessory.framework" framework="true" />
         <framework src="src/ios/libepos2.a" custom="true" />
 
     </platform>
