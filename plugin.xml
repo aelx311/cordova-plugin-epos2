@@ -36,7 +36,7 @@
         </js-module>
         <config-file target="config.xml" parent="/*">
             <feature name="epos2">
-                <param name="ios-package" value="epos2" onload="true" />
+                <param name="ios-package" value="epos2Plugin" onload="true" />
             </feature>
         </config-file>
 
