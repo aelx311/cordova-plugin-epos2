@@ -20,12 +20,14 @@
       </js-module>
       <config-file target="res/xml/config.xml" parent="/*">
         <feature name="epos2">
-          <param name="android-package" value="com.example.epos2" />
+          <param name="android-package" value="com.cordova.plugin.epos2" />
           <param name="onload" value="true" />
         </feature>
       </config-file>
 
-      <source-file src="src/android/com/example/epos2-plugin.java" target-dir="src/com/example/" />
+      <source-file src="src/android/epos2Plugin.java" target-dir="src/com/cordova/plugin" />
+      <source-file src="src/android/libepos2.so" target-dir="jniLibs/armeabi/" />
+      <source-file src="src/android/ePOS2.jar" target-dir="libs/" />
     </platform>
 
     <!-- ios -->

@@ -1,6 +1,6 @@
 /**
  */
-package com.example;
+package com.cordova.plugin;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
@@ -16,13 +16,13 @@ import android.util.Log;
 
 import java.util.Date;
 
-public class MyCordovaPlugin extends CordovaPlugin {
-  private static final String TAG = "MyCordovaPlugin";
+public class epos2Plugin extends CordovaPlugin {
+  private static final String TAG = "epos2";
 
   public void initialize(CordovaInterface cordova, CordovaWebView webView) {
     super.initialize(cordova, webView);
 
-    Log.d(TAG, "Initializing MyCordovaPlugin");
+    Log.d(TAG, "Initializing epos2");
   }
 
   public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) throws JSONException {
