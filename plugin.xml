@@ -25,6 +25,14 @@
         </feature>
       </config-file>
 
+      <config-file target="AndroidManifest.xml" parent="/*">
+        <uses-permission android:name="android.permission.BLUETOOTH"/>
+        <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+        <uses-permission android:name="android.permission.INTERNET"/>
+        <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+        <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+      </config-file>
+
       <source-file src="src/android/epos2Plugin.java" target-dir="src/com/cordova/plugin" />
       <source-file src="src/android/libepos2.so" target-dir="jniLibs/armeabi/" />
       <source-file src="src/android/ePOS2.jar" target-dir="libs/" />
