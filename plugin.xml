@@ -35,7 +35,7 @@
 
       <source-file src="src/android/epos2Plugin.java" target-dir="src/com/cordova/plugin" />
       <source-file src="src/android/libepos2.so" target-dir="jniLibs/armeabi/" />
-      <source-file src="src/android/ePOS2.jar" target-dir="libs/" />
+      <lib-file src="src/android/ePOS2.jar" />
     </platform>
 
     <!-- ios -->
