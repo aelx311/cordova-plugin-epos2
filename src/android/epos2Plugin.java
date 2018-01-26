@@ -22,20 +22,21 @@ public class epos2Plugin extends CordovaPlugin {
   public void initialize(CordovaInterface cordova, CordovaWebView webView) {
     super.initialize(cordova, webView);
 
-    Log.d(TAG, "Initializing epos2");
+    Log.d(TAG, "Initializing epos2Plugin");
   }
 
-  public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) throws JSONException {
-    if(action.equals("echo")) {
-      String phrase = args.getString(0);
-      // Echo back the first argument
-      Log.d(TAG, phrase);
-    } else if(action.equals("getDate")) {
-      // An example of returning data back to the web layer
-      final PluginResult result = new PluginResult(PluginResult.Status.OK, (new Date()).toString());
-      callbackContext.sendPluginResult(result);
-    }
+  public boolean execute(final String action, final JSONArray args, final CallbackContext callbackContext) throws JSONException {
+    cordova.getThreadPool().execute(new Runnable() {
+            public void run() {
+                if (action.equals("startDiscovery")) {
+                    startDiscovery();
+                }
+            }
+        });
     return true;
   }
 
+  private void startDiscovery() {
+    Log.d(TAG, "startDicvoery() called");
+  }
 }
