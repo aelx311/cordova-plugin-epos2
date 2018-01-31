@@ -8,12 +8,19 @@
       "ios"
     ]
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aelx311/cordova-plugin-epos2"
+  },
   "keywords": [
     "ios",
     "cordova",
     "apache",
     "ecosystem:cordova",
-    "cordova:platform"
+    "cordova:platform",
+    "epos2",
+    "epson",
+    "printer"
   ],
   "description": "A starting point for a Cordova Plugin"
 }
