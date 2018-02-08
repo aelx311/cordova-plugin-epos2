@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.epson.epos2.Epos2Exception;
@@ -26,37 +27,95 @@ import com.epson.epos2.printer.ReceiveListener;
 import java.util.Date;
 import java.util.HashMap;
 
-public class epos2Plugin extends CordovaPlugin {
+public class epos2Plugin extends CordovaPlugin implements ReceiveListener {
     private static final String TAG = "epos2";
-    private CordovaWebView webView = null;
     private CallbackContext callbackContext = null;
     private Printer printer = null;
 
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
-        this.webView = webView;
-        Log.d(TAG, "Initializing epos2Plugin");
     }
 
     public boolean execute(final String action, final JSONArray args, final CallbackContext callbackContext) throws JSONException {
         this.callbackContext = callbackContext;
 
-        cordova.getThreadPool().execute(new Runnable() {
-            public void run() {
-                if (action.equals("startDiscover")) {
+//        cordova.getActivity().runOnUiThread(new Runnable() {
+//            public void run() {
+//                if (action.equals("startDiscover")) {
+//                    startDiscovery();
+//                } else if (action.equals("stopDiscover")) {
+//                    stopDiscovery(callbackContext);
+//                } else if (action.equals("connectPrinter")) {
+//                    connectPrinter(args, callbackContext);
+//                } else if (action.equals("disconnectPrinter")) {
+//                    disconnectPrinter(callbackContext);
+//                } else if (action.equals("print")) {
+//                    print(args, callbackContext);
+//                }
+//            }
+//        });
+
+//        cordova.getThreadPool().execute(new Runnable() {
+//            public void run() {
+//                if (action.equals("startDiscover")) {
+//                    startDiscovery();
+//                } else if (action.equals("stopDiscover")) {
+//                    stopDiscovery(callbackContext);
+//                } else if (action.equals("connectPrinter")) {
+//                    connectPrinter(args, callbackContext);
+//                } else if (action.equals("disconnectPrinter")) {
+//                    disconnectPrinter(callbackContext);
+//                } else if (action.equals("print")) {
+//                    print(args, callbackContext);
+//                }
+//            }
+//        });
+
+        if (action.equals("startDiscover")) {
+            cordova.getThreadPool().execute(new Runnable() {
+                @Override
+                public void run() {
                     startDiscovery();
-                } else if (action.equals("stopDiscover")) {
-                    stopDiscovery(callbackContext);
-                } else if (action.equals("connectPrinter")) {
-                    connectPrinter(args, callbackContext);
-                } else if (action.equals("disconnectPrinter")) {
-                    disconnectPrinter(callbackContext);
-                } else if (action.equals("print")) {
-                    print(args, callbackContext);
                 }
-            }
-        });
-        return true;
+            });
+            return true;
+        }
+
+        if (action.equals("stopDiscover")) {
+            cordova.getThreadPool().execute(new Runnable() {
+                @Override
+                public void run() {
+                    stopDiscovery(callbackContext);
+                }
+            });
+            return true;
+        }
+
+        if (action.equals("connectPrinter")) {
+            cordova.getThreadPool().execute(new Runnable() {
+                @Override
+                public void run() {
+                    connectPrinter(args, callbackContext);
+                }
+            });
+
+//            PluginResult pluginResult = new  PluginResult(PluginResult.Status.NO_RESULT);
+//            pluginResult.setKeepCallback(true);
+//            callbackContext.sendPluginResult(pluginResult);
+            return true;
+        }
+
+        if (action.equals("disconnectPrinter")) {
+            disconnectPrinter(callbackContext);
+            return true;
+        }
+
+        if (action.equals("print")) {
+            print(args, callbackContext);
+            return true;
+        }
+
+        return false;
     }
 
     private void startDiscovery() {
@@ -66,7 +125,7 @@ public class epos2Plugin extends CordovaPlugin {
         try {
             Discovery.start(webView.getContext(), mFilterOption, mDiscoveryListener);
         } catch (Epos2Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error discovering printer: " + e.getErrorStatus(), e);
         }
     }
 
@@ -89,46 +148,34 @@ public class epos2Plugin extends CordovaPlugin {
     }
 
     private void connectPrinter(final JSONArray args, final CallbackContext callbackContext) {
-        try {
-            printer = new Printer(Printer.TM_U220, Printer.MODEL_ANK, webView.getContext());
-        }
-        catch (Exception e) {
-            callbackContext.error("Error creating printer");
-            Log.e(TAG, "Error creating printer");
-        }
-
-        boolean isBeginTransaction = false;
-
         if (printer == null) {
-            Log.e(TAG, "printer is null");
-        }
-
-        try {
-            printer.connect("TCP:64:EB:8C:FB:10:4D", Printer.PARAM_DEFAULT);
-        }
-        catch (Exception e) {
-            Log.e(TAG, "Error connecting printer");
-        }
-
-        try {
-            printer.beginTransaction();
-            isBeginTransaction = true;
-        }
-        catch (Exception e) {
-            Log.e(TAG, "Error beginning transaction");
-        }
-
-        if (isBeginTransaction == false) {
             try {
-                printer.disconnect();
+                printer = new Printer(Printer.TM_U220, Printer.MODEL_ANK, cordova.getActivity());
+                printer.setReceiveEventListener(this);
             }
             catch (Epos2Exception e) {
+                PluginResult result = new PluginResult(Status.ERROR, "Error creating printer");
+                callbackContext.sendPluginResult(result);
+                Log.e(TAG, "Error creating printer: " + e.getErrorStatus(), e);
+                return;
+            }
 
+            try {
+                String target = args.getString(0);
+                printer.connect("TCP:" + target , Printer.PARAM_DEFAULT);
+            } catch (Epos2Exception e) {
+                PluginResult result = new PluginResult(Status.ERROR, "Error connecting printer: " + e.getErrorStatus());
+                callbackContext.sendPluginResult(result);
+                Log.e(TAG, "Error connecting printer: " + e.getErrorStatus(), e);
+            } catch (JSONException e) {
+                PluginResult result = new PluginResult(Status.ERROR, "Error getting target: " + e.getCause());
+                callbackContext.sendPluginResult(result);
+                Log.e(TAG, "Error connecting printer", e);
             }
         }
 
-        printer.setReceiveEventListener(mPtrReceive);
-
+        PluginResult result = new PluginResult(Status.OK, "Done printing");
+        callbackContext.sendPluginResult(result);
     }
 
     private void disconnectPrinter(final CallbackContext callbackContext) {
@@ -150,10 +197,6 @@ public class epos2Plugin extends CordovaPlugin {
             Log.d(TAG, "Error disconnecting printer");
         }
 
-        if (printer == null) {
-            return;
-        }
-
         printer.clearCommandBuffer();
 
         printer.setReceiveEventListener(null);
@@ -163,27 +206,48 @@ public class epos2Plugin extends CordovaPlugin {
 
     private void print(final JSONArray array, final CallbackContext callbackContext) {
         if (printer == null) {
+            callbackContext.error("printer not found");
             return;
         }
 
         StringBuilder textData = new StringBuilder();
         try {
-//            printer.addTextAlign(Printer.ALIGN_CENTER);
+            JSONArray dataArray = array.getJSONArray(0);
+            for (int i = 0; i < dataArray.length(); i++) {
+                String data = dataArray.getString(i);
+                Log.d(TAG, data);
+                if ("\n".equals(data)) {
+                    printer.addFeedLine(1);
+                } else {
+                    printer.addText(data);
+                }
+            }
 
-            printer.addFeedLine(1);
-            textData.append("THE STORE 123 (555) 555 – 5555\n");
-            textData.append("STORE DIRECTOR – John Smith\n");
-            textData.append("\n");
-            textData.append("7/01/07 16:58 6153 05 0191 134\n");
-            textData.append("ST# 21 OP# 001 TE# 01 TR# 747\n");
-            textData.append("------------------------------\n");
-            printer.addText(textData.toString());
-            textData.delete(0, textData.length());
+//            printer.addCut(Printer.CUT_FEED);
 
-            printer.addCut(Printer.CUT_FEED);
+            PrinterStatusInfo status = printer.getStatus();
+
+//            if (!isPrintable(status)) {
+//                ShowMsg.showMsg(makeErrorMessage(status), mContext);
+//                try {
+//                    mPrinter.disconnect();
+//                }
+//                catch (Exception ex) {
+//                    // Do nothing
+//                }
+//                return false;
+//            }
+
+//                printer.sendData(Printer.PARAM_DEFAULT);
         }
         catch (Exception e) {
             Log.e(TAG, "Error printing");
+            try {
+                printer.disconnect();
+            }
+            catch (Exception ex) {
+                Log.e(TAG, "Error disconnecting");
+            }
         }
     }
 
@@ -207,11 +271,18 @@ public class epos2Plugin extends CordovaPlugin {
         }
     };
 
-    private ReceiveListener mPtrReceive = new ReceiveListener() {
-        @Override
-        public void onPtrReceive(final Printer printer, final int code, final PrinterStatusInfo status, final String printJobId) {
-            Log.d(TAG, "status: " + status);
-            disconnectPrinter(null);
-        }
-    };
+//    private ReceiveListener mPtrReceive = new ReceiveListener() {
+//        @Override
+//        public void onPtrReceive(final Printer printer, final int code, final PrinterStatusInfo status, final String printJobId) {
+//            Log.d(TAG, "status: " + status);
+//            disconnectPrinter(null);
+//        }
+//    };
+
+    @Override
+    public void onPtrReceive(Printer printer, int code, PrinterStatusInfo status, String printJobId) {
+        Log.d(TAG, "status: " + status);
+        this.callbackContext.success("onPtrReceive");
+        disconnectPrinter(null);
+    }
 }
