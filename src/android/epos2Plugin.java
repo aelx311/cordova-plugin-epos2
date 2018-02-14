@@ -35,26 +35,26 @@ public class epos2Plugin extends CordovaPlugin {
     public boolean execute(final String action, final JSONArray args, final CallbackContext callbackContext) throws JSONException {
         this.callbackContext = callbackContext;
 
-        cordova.getThreadPool().execute(new Runnable() {
-            public void run() {
+//        cordova.getThreadPool().execute(new Runnable() {
+//            public void run() {
                 if (action.equals("startDiscover")) {
-                    startDiscovery();
+                    startDiscovery(callbackContext);
                 } else if (action.equals("stopDiscover")) {
                     stopDiscovery(callbackContext);
                 } else if (action.equals("connectPrinter")) {
                     connectPrinter(args, callbackContext);
                 } else if (action.equals("disconnectPrinter")) {
-                    disconnectPrinter(callbackContext);
+                    disconnectPrinter();
                 } else if (action.equals("print")) {
                     print(args, callbackContext);
                 }
-            }
-        });
+//            }
+//        });
 
         return true;
     }
 
-    private void startDiscovery() {
+    private void startDiscovery(final CallbackContext callbackContext) {
         FilterOption mFilterOption = new FilterOption();
         mFilterOption.setDeviceType(Discovery.TYPE_PRINTER);
         mFilterOption.setEpsonFilter(Discovery.FILTER_NAME);
@@ -62,6 +62,7 @@ public class epos2Plugin extends CordovaPlugin {
             Discovery.start(webView.getContext(), mFilterOption, discoveryListener);
         } catch (Epos2Exception e) {
             Log.e(TAG, "Error discovering printer: " + e.getErrorStatus(), e);
+            callbackContext.error("Error discovering printer: " + e.getErrorStatus());
         }
     }
 
@@ -77,17 +78,13 @@ public class epos2Plugin extends CordovaPlugin {
                 if (e.getErrorStatus() != Epos2Exception.ERR_PROCESSING) {
                     PluginResult result = new PluginResult(Status.ERROR, false);
                     callbackContext.sendPluginResult(result);
-                    break;
+                    return;
                 }
             }
         }
     }
 
     private void connectPrinter(final JSONArray args, final CallbackContext callbackContext) {
-        if (printer != null) {
-            return;
-        }
-
         try {
             printer = new Printer(Printer.TM_U220, Printer.MODEL_ANK, webView.getContext());
             printer.setReceiveEventListener(receiveListener);
@@ -104,9 +101,11 @@ public class epos2Plugin extends CordovaPlugin {
         } catch (Epos2Exception e) {
             callbackContext.error("Error connecting printer: " + e.getErrorStatus());
             Log.e(TAG, "Error connecting printer: " + e.getErrorStatus(), e);
+            return;
         } catch (JSONException e) {
             callbackContext.error("Error getting target: " + e.getCause());
             Log.e(TAG, "Error connecting printer", e);
+            return;
         }
 
         try {
@@ -114,13 +113,15 @@ public class epos2Plugin extends CordovaPlugin {
         } catch (Epos2Exception e) {
             callbackContext.error("Error beginning transaction");
             Log.e(TAG, "Error beginning transaction", e);
+            return;
         }
 
         PluginResult result = new PluginResult(Status.OK, "Done connecting");
+        result.setKeepCallback(true);
         callbackContext.sendPluginResult(result);
     }
 
-    private void disconnectPrinter(final CallbackContext callbackContext) {
+    private void disconnectPrinter() {
         if (printer == null) {
             return;
         }
@@ -129,6 +130,7 @@ public class epos2Plugin extends CordovaPlugin {
             printer.endTransaction();
         }
         catch (Epos2Exception e) {
+//            callbackContext.error("Error ending transaction: " + e.getErrorStatus());
             Log.e(TAG, "Error ending transaction: " + e.getErrorStatus(), e);
         }
 
@@ -136,14 +138,17 @@ public class epos2Plugin extends CordovaPlugin {
             printer.disconnect();
         }
         catch (Epos2Exception e) {
+//            callbackContext.error("Error disconnecting printer: " + e.getErrorStatus());
             Log.e(TAG, "Error disconnecting printer: " + e.getErrorStatus(), e);
         }
 
         printer.clearCommandBuffer();
-
         printer.setReceiveEventListener(null);
-
         printer = null;
+
+//        PluginResult result = new PluginResult(Status.OK, true);
+//        result.setKeepCallback(true);
+//        callbackContext.sendPluginResult(result);
     }
 
     private void print(final JSONArray array, final CallbackContext callbackContext) {
@@ -162,31 +167,37 @@ public class epos2Plugin extends CordovaPlugin {
                 }
             }
 
-//            printer.addCut(Printer.CUT_FEED);
+            printer.addCut(Printer.CUT_FEED);
 
             PrinterStatusInfo status = printer.getStatus();
 
             if (!isPrintable(status)) {
+                callbackContext.error("Error printing: printer is not printable");
                 Log.e(TAG, "Error printing: printer is not printable");
+
                 try {
                     printer.disconnect();
                 }
                 catch (Epos2Exception ex) {
+                    callbackContext.error("Error disconnecting");
                     Log.e(TAG, "Error disconnecting", ex);
                 }
+                return;
             }
 
             printer.sendData(Printer.PARAM_DEFAULT);
-        }
-        catch (Epos2Exception e) {
+        } catch (Epos2Exception e) {
+            callbackContext.error("Error printing");
             Log.e(TAG, "Error printing", e);
             try {
                 printer.disconnect();
             }
             catch (Epos2Exception ex) {
+                callbackContext.error("Error disconnecting");
                 Log.e(TAG, "Error disconnecting", ex);
             }
         } catch (JSONException e) {
+            callbackContext.error("Error getting data");
             Log.e(TAG, "Error getting data", e);
         }
     }
@@ -214,8 +225,16 @@ public class epos2Plugin extends CordovaPlugin {
     private ReceiveListener receiveListener = new ReceiveListener() {
         @Override
         public void onPtrReceive(final Printer printer, final int code, final PrinterStatusInfo status, final String printJobId) {
-            Log.d(TAG, "status: " + status.getErrorStatus());
-            disconnectPrinter(null);
+            Log.d(TAG, "print success. status: " + status.getErrorStatus());
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    disconnectPrinter();
+                }
+            }).start();
+
+//            callbackContext.success("print success");
         }
     };
 
