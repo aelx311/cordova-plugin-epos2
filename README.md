@@ -11,6 +11,7 @@ API
 
 ### Printer Discovery
 #### .startDiscover(successCallback, errorCallback)
+This will only search for supported printers in local area network(LAN)
 ```
 window.epos2.startDiscover(function(deviceInfo) => {
     // success callback with deviceInfo
