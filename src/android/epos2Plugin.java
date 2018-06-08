@@ -35,21 +35,17 @@ public class epos2Plugin extends CordovaPlugin {
     public boolean execute(final String action, final JSONArray args, final CallbackContext callbackContext) throws JSONException {
         this.callbackContext = callbackContext;
 
-        cordova.getThreadPool().execute(new Runnable() {
-            public void run() {
-                if (action.equals("startDiscover")) {
-                    startDiscovery(callbackContext);
-                } else if (action.equals("stopDiscover")) {
-                    stopDiscovery(callbackContext);
-                } else if (action.equals("connectPrinter")) {
-                    connectPrinter(args, callbackContext);
-                } else if (action.equals("disconnectPrinter")) {
-                    disconnectPrinter();
-                } else if (action.equals("print")) {
-                    print(args, callbackContext);
-                }
-            }
-        });
+        if (action.equals("startDiscover")) {
+            startDiscovery(callbackContext);
+        } else if (action.equals("stopDiscover")) {
+            stopDiscovery(callbackContext);
+        } else if (action.equals("connectPrinter")) {
+            connectPrinter(args, callbackContext);
+        } else if (action.equals("disconnectPrinter")) {
+            disconnectPrinter();
+        } else if (action.equals("print")) {
+            print(args, callbackContext);
+        }
 
         return true;
     }
@@ -85,6 +81,8 @@ public class epos2Plugin extends CordovaPlugin {
     }
 
     private void connectPrinter(final JSONArray args, final CallbackContext callbackContext) {
+        Log.d(TAG, "Connecting Printer");
+
         try {
             printer = new Printer(Printer.TM_U220, Printer.MODEL_ANK, webView.getContext());
             printer.setReceiveEventListener(receiveListener);
@@ -117,7 +115,6 @@ public class epos2Plugin extends CordovaPlugin {
         }
 
         PluginResult result = new PluginResult(Status.OK, "Done connecting");
-        result.setKeepCallback(true);
         callbackContext.sendPluginResult(result);
     }
 
@@ -149,7 +146,6 @@ public class epos2Plugin extends CordovaPlugin {
         printer = null;
 
         PluginResult result = new PluginResult(Status.OK, true);
-        result.setKeepCallback(true);
         callbackContext.sendPluginResult(result);
     }
 
