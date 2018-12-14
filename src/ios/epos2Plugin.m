@@ -164,51 +164,32 @@
 
     NSArray *printData = command.arguments;
 
-    [self.commandDelegate runInBackground:^{
-        int result = EPOS2_SUCCESS;
-
-        for (NSString* data in printData) {
-            NSLog(@"%@", data);
-            if ([data isEqualToString:@"\n"]) {
-                result = [printer addFeedLine:1];
-            } else {
-                result = [printer addText:data];
-            }
-
-            if (result != EPOS2_SUCCESS) {
-                break;
-            }
-        }
-
-        if (result != EPOS2_SUCCESS) {
-            return;
-        }
-
-        [self printData];
-    }];
-}
-
-- (void)printData {
     int result = EPOS2_SUCCESS;
 
-//    Epos2PrinterStatusInfo *status = nil;
+    for (NSString* data in printData) {
+        NSLog(@"%@", data);
+        result = [printer addText:data];
 
-//    if (printer == nil) {
-//        return;
-//    }
-//
-//    if (![self connectPrinter]) {
-//        return;
-//    }
+        if (result != EPOS2_SUCCESS) {
+            break;
+        }
+    }
 
-//    status = [printer getStatus];
-//    [self dispPrinterWarnings:status];
+    [printer addCut:EPOS2_CUT_FEED];
 
-//    if (![self isPrintable:status]) {
-//        [ShowMsg show:[self makeErrorMessage:status]];
-//        [printer disconnect];
-//        return;
-//    }
+    if (result != EPOS2_SUCCESS) {
+        return;
+    }
+
+    [self sendDataToPrinter];
+}
+
+- (void)sendDataToPrinter {
+    int result = EPOS2_SUCCESS;
+
+    if (printer == nil) {
+        return;
+    }
 
     result = [printer sendData:EPOS2_PARAM_DEFAULT];
     if (result != EPOS2_SUCCESS) {
@@ -221,7 +202,6 @@
 
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:YES];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:self.printCallbackId];
-    return;
 }
 
 @end
